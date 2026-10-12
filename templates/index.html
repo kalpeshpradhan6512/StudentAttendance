@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendX | Student Attendance</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">A</div>
+            <div>
+                <h2>Attend<span>X</span></h2>
+                <small>MANAGEMENT SYSTEM</small>
+            </div>
+        </div>
+
+        <p class="nav-label">MAIN MENU</p>
+        <nav class="navigation">
+            <a href="#dashboard" class="nav-item active">
+                <span>▦</span> Dashboard
+            </a>
+            <a href="#attendance" class="nav-item">
+                <span>✓</span> Mark Attendance
+            </a>
+            <a href="#reports" class="nav-item">
+                <span>▤</span> Attendance Reports
+            </a>
+            <a href="#students" class="nav-item">
+                <span>♙</span> Manage Students
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile-avatar">SA</div>
+            <div class="profile-info">
+                <strong>Administrator</strong>
+                <small>Student Portal</small>
+            </div>
+            <span class="online-dot"></span>
+        </div>
+    </aside>
+
+    <main class="main-content" id="dashboard">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">OVERVIEW</p>
+                <h1>Dashboard <span class="wave">✦</span></h1>
+                <p class="subtitle">Manage your students and attendance in one place.</p>
+            </div>
+
+            <div class="topbar-right">
+                <div class="live-status">
+                    <span class="online-dot"></span> System Online
+                </div>
+                <div class="date-display">{{ today }}</div>
+            </div>
+        </header>
+
+        {% if message %}
+            <div class="notice">{{ message }}</div>
+        {% endif %}
+
+        <section class="welcome-banner">
+            <div class="banner-content">
+                <span class="banner-tag">STUDENT MANAGEMENT</span>
+                <h2>Welcome to AttendX</h2>
+                <p>Your classroom attendance, simplified.</p>
+                <a href="#attendance" class="banner-button">
+                    Mark Attendance <span>→</span>
+                </a>
+            </div>
+            <div class="banner-art" aria-hidden="true">
+                <div class="art-circle circle-one"></div>
+                <div class="art-circle circle-two"></div>
+                <div class="art-card">
+                    <div class="art-check">✓</div>
+                    <div>
+                        <strong>Attendance</strong>
+                        <small>Tracking made simple</small>
+                    </div>
+                </div>
+                <div class="art-spark">✦</div>
+            </div>
+        </section>
+
+        <section class="stats-grid">
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon blue-icon">♙</span>
+                    <span class="stat-label">TOTAL STUDENTS</span>
+                </div>
+                <h2>{{ total }}</h2>
+                <p>Registered students</p>
+                <div class="stat-line blue-line"></div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon green-icon">✓</span>
+                    <span class="stat-label">PRESENT TODAY</span>
+                </div>
+                <h2>{{ present }}</h2>
+                <p>Students present</p>
+                <div class="stat-line green-line"></div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon red-icon">✕</span>
+                    <span class="stat-label">ABSENT TODAY</span>
+                </div>
+                <h2>{{ absent }}</h2>
+                <p>Students absent</p>
+                <div class="stat-line red-line"></div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon purple-icon">◷</span>
+                    <span class="stat-label">ATTENDANCE RATE</span>
+                </div>
+                <h2>{{ ((present / (present + absent)) * 100)|round|int if (present + absent) else 0 }}<span class="percent">%</span></h2>
+                <p>Today's attendance</p>
+                <div class="stat-line purple-line"></div>
+            </article>
+        </section>
+
+        <section class="panel" id="students">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">STUDENT DIRECTORY</p>
+                    <h2>Add New Student</h2>
+                </div>
+                <span class="section-symbol">＋</span>
+            </div>
+
+            <form method="POST" class="student-form">
+                <input type="hidden" name="action" value="add">
+
+                <div class="field">
+                    <label for="name">Student Name</label>
+                    <input id="name" type="text" name="name"
+                           placeholder="Enter full name" required>
+                </div>
+
+                <div class="field">
+                    <label for="roll_no">Roll Number</label>
+                    <input id="roll_no" type="text" name="roll_no"
+                           placeholder="e.g. 101" required>
+                </div>
+
+                <button type="submit" class="primary-button">
+                    + Add Student
+                </button>
+            </form>
+        </section>
+
+        <section class="panel" id="attendance">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">DAILY TRACKING</p>
+                    <h2>Mark Attendance</h2>
+                    <p class="section-description">Select Present or Absent for each student.</p>
+                </div>
+                <span class="section-symbol green-symbol">✓</span>
+            </div>
+
+            <form method="POST">
+                <input type="hidden" name="action" value="attendance">
+
+                <div class="date-field">
+                    <label for="attendance-date">Attendance Date</label>
+                    <input type="date" id="attendance-date"
+                           name="date" value="{{ today }}" required>
+                </div>
+
+                {% if students %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ROLL NO.</th>
+                                <th>STUDENT NAME</th>
+                                <th>ATTENDANCE STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <td><span class="roll-badge">{{ student.roll_no }}</span></td>
+                                <td class="student-name">{{ student.name }}</td>
+                                <td>
+                                    <select name="status_{{ student.id }}" required>
+                                        <option value="">Choose status</option>
+                                        <option value="Present">Present</option>
+                                        <option value="Absent">Absent</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" class="primary-button save-button">
+                    ✓ Save Attendance
+                </button>
+                {% else %}
+                <div class="empty-state">
+                    <span>♙</span>
+                    <h3>No students yet</h3>
+                    <p>Add a student above to start taking attendance.</p>
+                </div>
+                {% endif %}
+            </form>
+        </section>
+
+        <section class="panel" id="reports">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ATTENDANCE OVERVIEW</p>
+                    <h2>Today's Attendance Report</h2>
+                </div>
+                <span class="section-symbol purple-symbol">▤</span>
+            </div>
+
+            {% if records %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ROLL NO.</th>
+                            <th>STUDENT NAME</th>
+                            <th>STATUS</th>
+                            <th>DATE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in records %}
+                        <tr>
+                            <td><span class="roll-badge">{{ record.roll_no }}</span></td>
+                            <td class="student-name">{{ record.name }}</td>
+                            <td>
+                                <span class="status-badge {{ 'present' if record.status == 'Present' else 'absent' }}">
+                                    {{ record.status }}
+                                </span>
+                            </td>
+                            <td>{{ record.date }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state compact-empty">
+                <span>▤</span>
+                <p>No attendance saved for this date.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">RECORD MANAGEMENT</p>
+                    <h2>Manage Students</h2>
+                </div>
+                <span class="section-symbol">♙</span>
+            </div>
+
+            {% if students %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ROLL NO.</th>
+                            <th>STUDENT NAME</th>
+                            <th>PRESENT DAYS</th>
+                            <th>ATTENDANCE %</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for student in students %}
+                        <tr>
+                            <td><span class="roll-badge">{{ student.roll_no }}</span></td>
+                            <td class="student-name">{{ student.name }}</td>
+                            <td>{{ student.present_count }}</td>
+                            <td>
+                                <span class="percentage-badge">
+                                    {{ ((student.present_count / student.total_count) * 100)|round(1) if student.total_count else 0 }}%
+                                </span>
+                            </td>
+                            <td>
+                                <form method="POST"
+                                      onsubmit="return confirm('Delete this student and their attendance records?')">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="student_id"
+                                           value="{{ student.id }}">
+                                    <button type="submit" class="delete-button">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state compact-empty">
+                <span>♙</span>
+                <p>Your student list will appear here.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <footer class="footer">
+            <span><strong>AttendX</strong> · Student Attendance Management System</span>
+            <span>Made with Python & Flask</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>
